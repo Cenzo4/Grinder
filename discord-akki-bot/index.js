@@ -28,6 +28,22 @@ client.on('ready', async () => {
   console.log(`💰 OwO Grinder Ready!`);
 });
 
+// Auto-restart if Discord disconnects the selfbot
+client.on('disconnect', () => {
+  console.log('❌ Bot disconnected from Discord! Forcing restart...');
+  process.exit(1); // Render will automatically restart it
+});
+
+client.on('error', (error) => {
+  console.error('⚠️ Discord Client Error:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', error => {
+  console.error('⚠️ Unhandled promise rejection:', error);
+  // process.exit(1); // Uncomment if needed, but sometimes it's just a network glitch
+});
+
 client.on('messageCreate', async (message) => {
   // Control Commands (Allow your own account OR the specific user)
   if (message.author.id === client.user.id || message.author.id === ALLOWED_USER) {
