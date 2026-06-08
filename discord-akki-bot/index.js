@@ -19,6 +19,8 @@ let currentBet = BASE_BET;
 let isGrinding = false;
 let minDelayMs = 13000;
 let maxDelayMs = 18000;
+let currentSide = 'h'; // Tracks the current side to bet
+const MAX_BET = 250000; // OwO maximum bet limit
 
 // Random sleep function
 const sleep = (min, max) => new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * (max - min + 1)) + min));
@@ -58,7 +60,7 @@ client.on('messageCreate', async (message) => {
       
       const targetChannel = client.channels.cache.get(currentChannelId);
       if (targetChannel) {
-        targetChannel.send(`owo cf ${currentBet}`);
+        targetChannel.send(`owo cf ${currentBet} ${currentSide}`);
       } else {
         message.reply(`❌ Cannot find target channel. Use !setchannel here first.`);
         isGrinding = false;
@@ -119,15 +121,31 @@ client.on('messageUpdate', async (oldMessage, newMessage) => {
         console.log(`🎉 Won! Resetting bet to base: ${BASE_BET}`);
         currentBet = BASE_BET;
         
+        // Switch side if we won
+        currentSide = currentSide === 'h' ? 't' : 'h';
+        
         await sleep(minDelayMs, maxDelayMs);
-        if (isGrinding) newMessage.channel.send(`owo cf ${currentBet}`);
+        if (isGrinding) {
+          newMessage.channel.send(`owo cf ${currentBet} ${currentSide}`);
+        }
         
       } else if (isLoss) {
-        currentBet = currentBet * 2;
-        console.log(`😢 Lost! Doubling bet to ${currentBet}`);
+        // Double the bet and add an extra 20%
+        currentBet = Math.ceil(currentBet * 2.20);
+        
+        // Cap the bet at 250,000 (OwO limit)
+        if (currentBet > MAX_BET) {
+          currentBet = MAX_BET;
+        }
+        
+        console.log(`😢 Lost! Increasing bet to ${currentBet}`);
+        
+        // Do NOT switch side if we lost. Keep betting the same side.
         
         await sleep(minDelayMs, maxDelayMs);
-        if (isGrinding) newMessage.channel.send(`owo cf ${currentBet}`);
+        if (isGrinding) {
+          newMessage.channel.send(`owo cf ${currentBet} ${currentSide}`);
+        }
       }
     }
   }
