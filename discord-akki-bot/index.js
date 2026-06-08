@@ -102,8 +102,8 @@ client.on('messageCreate', async (message) => {
         let delay = 0;
         
         if (catsSeen <= 2) {
-          // First 2 cats: Extremely fast (90ms to 100ms)
-          delay = Math.floor(Math.random() * (100 - 90 + 1)) + 90;
+          // First 2 cats: As fast as physically possible (0ms delay)
+          delay = 0;
         } else {
           // 60% chance: 2 to 8 seconds
           // 40% chance: 10 to 25 seconds
