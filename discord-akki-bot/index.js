@@ -22,6 +22,44 @@ let maxDelayMs = 18000;
 let currentSide = 'h'; // Tracks the current side to bet
 const MAX_BET = 250000; // OwO maximum bet limit
 
+// Background task timers
+let huntTimer = null;
+let prayTimer = null;
+let dailyTimer = null;
+
+function startBackgroundTasks(channel) {
+  // Daily
+  channel.send('owo daily');
+  dailyTimer = setInterval(() => {
+    if(isGrinding) channel.send('owo daily');
+  }, 24 * 60 * 60 * 1000 + 5000); // 24 hours + 5s
+
+  // Pray (Offset by 2s to avoid spam)
+  setTimeout(() => { if(isGrinding) channel.send('owo pray'); }, 2000);
+  prayTimer = setInterval(() => {
+    if(isGrinding) channel.send('owo pray');
+  }, 5 * 60 * 1000 + 5000); // 5 mins + 5s
+
+  // Hunt & Battle (Offset by 4s and 6s)
+  setTimeout(() => { if(isGrinding) channel.send('owo hunt'); }, 4000);
+  setTimeout(() => { if(isGrinding) channel.send('owo battle'); }, 6000);
+  
+  huntTimer = setInterval(() => {
+    if(isGrinding) {
+      channel.send('owo hunt');
+      setTimeout(() => {
+        if(isGrinding) channel.send('owo battle');
+      }, 2000); // Battle 2 seconds after hunt
+    }
+  }, 16000); // 16 seconds
+}
+
+function stopBackgroundTasks() {
+  clearInterval(huntTimer);
+  clearInterval(prayTimer);
+  clearInterval(dailyTimer);
+}
+
 // Random sleep function
 const sleep = (min, max) => new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * (max - min + 1)) + min));
 
@@ -61,6 +99,7 @@ client.on('messageCreate', async (message) => {
       const targetChannel = client.channels.cache.get(currentChannelId);
       if (targetChannel) {
         targetChannel.send(`owo cf ${currentBet} ${currentSide}`);
+        startBackgroundTasks(targetChannel); // Start extra tasks!
       } else {
         message.reply(`❌ Cannot find target channel. Use !setchannel here first.`);
         isGrinding = false;
@@ -68,6 +107,7 @@ client.on('messageCreate', async (message) => {
     } 
     else if (command === '!stop') {
       isGrinding = false;
+      stopBackgroundTasks(); // Stop extra tasks!
       console.log('🛑 Grinding stopped.');
       message.reply('🛑 Stopped grinding.');
     }
