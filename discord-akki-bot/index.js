@@ -32,6 +32,7 @@ const CAT_CHANNEL_ID = '1395460222088253450';
 const CAT_BOT_ID = '966695034340663367';
 let catTimeout = null;
 let catsSeen = 0;
+let isCatGrinding = false;
 
 function startBackgroundTasks(channel) {
   // Daily
@@ -92,7 +93,7 @@ process.on('unhandledRejection', error => {
 
 client.on('messageCreate', async (message) => {
   // 🐱 Cat Bot Automation 🐱
-  if (message.channel.id === CAT_CHANNEL_ID) {
+  if (isCatGrinding && message.channel.id === CAT_CHANNEL_ID) {
     if (message.author.id === CAT_BOT_ID) {
       const content = message.content.toLowerCase();
       
@@ -102,8 +103,8 @@ client.on('messageCreate', async (message) => {
         let delay = 0;
         
         if (catsSeen <= 2) {
-          // First 2 cats: As fast as physically possible (0ms delay)
-          delay = 0;
+          // First 2 cats: Extremely fast (90ms to 100ms) to avoid 0ms anti-cheat
+          delay = Math.floor(Math.random() * (100 - 90 + 1)) + 90;
         } else {
           // 60% chance: 2 to 8 seconds
           // 40% chance: 10 to 25 seconds
@@ -190,8 +191,22 @@ client.on('messageCreate', async (message) => {
       currentChannelId = message.channel.id;
       message.reply(`✅ Target channel updated! OwO grinding will now happen in this channel.`);
     }
+    else if (command === '!startcat') {
+      if (isCatGrinding) return message.reply('🐱 Cat grinding is already running!');
+      isCatGrinding = true;
+      catsSeen = 0;
+      message.reply('🐱 **Cat Grinding STARTED!** The next 2 cats will be caught at max speed.');
+    }
+    else if (command === '!stopcat') {
+      isCatGrinding = false;
+      if (catTimeout) {
+        clearTimeout(catTimeout);
+        catTimeout = null;
+      }
+      message.reply('🛑 **Cat Grinding STOPPED.**');
+    }
     else if (command === '!status') {
-      message.reply(`📊 **Grinder Status**\nRunning: ${isGrinding ? '✅ Yes' : '❌ No'}\nChannel: <#${currentChannelId}>\nBase Bet: **${BASE_BET}**\nCurrent Bet: **${currentBet}**\nDelay: **${minDelayMs/1000}s - ${maxDelayMs/1000}s**`);
+      message.reply(`📊 **Grinder Status**\nOwO Running: ${isGrinding ? '✅ Yes' : '❌ No'}\nCat Running: ${isCatGrinding ? '✅ Yes' : '❌ No'}\nChannel: <#${currentChannelId}>\nBase Bet: **${BASE_BET}**\nCurrent Bet: **${currentBet}**\nDelay: **${minDelayMs/1000}s - ${maxDelayMs/1000}s**`);
     }
   }
 
