@@ -27,6 +27,12 @@ let huntTimer = null;
 let prayTimer = null;
 let dailyTimer = null;
 
+// Cat Bot Config
+const CAT_CHANNEL_ID = '1395460222088253450';
+const CAT_BOT_ID = '966695034340663367';
+let catTimeout = null;
+let catsSeen = 0;
+
 function startBackgroundTasks(channel) {
   // Daily
   channel.send('owo daily');
@@ -85,6 +91,54 @@ process.on('unhandledRejection', error => {
 });
 
 client.on('messageCreate', async (message) => {
+  // 🐱 Cat Bot Automation 🐱
+  if (message.channel.id === CAT_CHANNEL_ID) {
+    if (message.author.id === CAT_BOT_ID) {
+      const content = message.content.toLowerCase();
+      
+      // Cat appears!
+      if (content.includes('has appeared') && content.includes('type "cat"')) {
+        catsSeen++;
+        let delay = 0;
+        
+        if (catsSeen <= 2) {
+          // First 2 cats: Extremely fast (90ms to 100ms)
+          delay = Math.floor(Math.random() * (100 - 90 + 1)) + 90;
+        } else {
+          // 60% chance: 2 to 8 seconds
+          // 40% chance: 10 to 25 seconds
+          if (Math.random() < 0.6) {
+            delay = Math.floor(Math.random() * (8000 - 2000 + 1)) + 2000;
+          } else {
+            delay = Math.floor(Math.random() * (25000 - 10000 + 1)) + 10000;
+          }
+        }
+        
+        console.log(`🐱 Cat appeared! Catching in ${delay/1000} seconds...`);
+        
+        catTimeout = setTimeout(() => {
+          message.channel.send('cat');
+          catTimeout = null;
+        }, delay);
+        
+      } else if (content.includes('cought') || content.includes('caught')) {
+        // Cat Bot announces someone caught it
+        if (catTimeout) {
+          clearTimeout(catTimeout);
+          catTimeout = null;
+          console.log('😿 Cat was already caught! Cancelled our typing.');
+        }
+      }
+    } else if (!message.author.bot && message.content.toLowerCase() === 'cat') {
+      // If another real user types 'cat' while we are waiting, cancel ours so we don't look like a bot
+      if (message.author.id !== client.user.id && catTimeout) {
+        clearTimeout(catTimeout);
+        catTimeout = null;
+        console.log('😿 Another user typed "cat" before us. Cancelled our typing to be safe.');
+      }
+    }
+  }
+
   // Control Commands (Allow your own account OR the specific user)
   if (message.author.id === client.user.id || message.author.id === ALLOWED_USER) {
     const args = message.content.trim().split(/ +/);
