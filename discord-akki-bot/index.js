@@ -140,6 +140,27 @@ client.on('messageCreate', async (message) => {
       message.reply(`📊 **Grinder Status**\nRunning: ${isGrinding ? '✅ Yes' : '❌ No'}\nChannel: <#${currentChannelId}>\nBase Bet: **${BASE_BET}**\nCurrent Bet: **${currentBet}**\nDelay: **${minDelayMs/1000}s - ${maxDelayMs/1000}s**`);
     }
   }
+
+  // 🚨 Anti-Captcha System 🚨
+  if (message.author.bot && isGrinding) {
+    const content = message.content.toLowerCase();
+    
+    // Check if the message contains 'captcha' and is meant for us (either DM or mentions us)
+    if (content.includes('captcha') && (!message.guild || content.includes(client.user.username.toLowerCase()) || message.mentions.users.has(client.user.id))) {
+      isGrinding = false;
+      stopBackgroundTasks();
+      console.log('🚨 CAPTCHA DETECTED! Stopping all tasks and alerting friend...');
+      
+      try {
+        const friend = await client.users.fetch(ALLOWED_USER);
+        if (friend) {
+          friend.send(`🚨 **CAPTCHA ALERT!** 🚨\nOwO Bot is asking for a Captcha on the selfbot account!\nAll grinding has been completely STOPPED.\nPlease check the account and solve the captcha ASAP to avoid a ban!`);
+        }
+      } catch(err) {
+        console.error('⚠️ Could not send DM to friend:', err);
+      }
+    }
+  }
 });
 
 // Listen to OwO bot edits
